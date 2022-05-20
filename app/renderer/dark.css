@@ -1,12 +1,26 @@
-.window.dark #main,
+.split {
+    opacity: 0;
+}
+
+.window.dark {
+    --dark-bg: #111111;
+    background: var(--dark-bg);
+}
+
 .window.dark #editor,
-.window.dark #toolbar {
-    background-color: #282828;
+.window.dark #player {
+    background-color: #222222;
+}
+
+.window.dark #main,
+.window.dark #toolbar,
+.twopane {
+    background-color: var(--dark-bg);
 }
 
 .window.dark #main .sidebar,
 .window.dark #main .sidebar .footer {
-    background-color: #282828;
+    background-color: var(--dark-bg);
 }
 
 .window.dark h1.title {
@@ -20,16 +34,42 @@
     color: #888;
 }
 
+.sidebar .footer .add-include-button {
+    background: #333;
+}
+
+.sidebar .footer .add-include-button:hover {
+    background: #444;
+}
+
+.sidebar .footer .add-include-button:active {
+    background: #222;
+}
+
 .window.dark #main .sidebar .nav-group-item.active {
-    background: #666;
+    background: #333;
 }
 
-.window.dark #main .sidebar .nav-group-item.active .filename {
+.window.dark #main .sidebar .nav-group-item:active {
+    background: #444;
+}
+
+.window.dark #main .sidebar .nav-group-item .iconfont {
+    color: #888;
+}
+.window.dark #main .sidebar .nav-group-item.active .filename,
+.window.dark #main .sidebar .nav-group-item.active .iconfont {
     color: #CCC;
 }
 
-.window.dark #toolbar .button:hover .icon {
-    color: #CCC;
+.window.dark #toolbar .button .iconfont {
+    color: #ccc;
+}
+.window.dark #toolbar .button:hover .iconfont {
+    color: #efefef;
+}
+.window.dark #toolbar .button:hover {
+    background: #222;
 }
 
 /* e.g. filename input */
@@ -46,7 +86,7 @@
 
 
 .window.dark #toolbar {
-    border-bottom: 1px solid #888;
+    border-bottom: none;
 }
 
 .window.dark #toolbar div.issuesSummary .issueCount {
@@ -54,7 +94,8 @@
 }
 
 .window.dark #main .sidebar .footer {
-    border-top: 1px solid #555;
+    /* border-top: 1px solid rgba(255, 255, 255, .05); */
+    border-top: none;
 }
 
 
@@ -63,15 +104,16 @@
 }
 
 .window.dark .ace_editor .ace_marker-layer .ace_selected-word {
-    background-color: #999;
-    border-color: #dedede;
+    background-color: #555;
+    border-color: transparent;
+    border-radius: 4px;
 }
 
 .window.dark #editor,
 .window.dark #player,
 .window.dark .ace_editor .ace_cursor {
     /*color: #f0f0f0; */
-    color: #faf1c6;
+    color: #e0e0e0;
 }
 
 .window.dark .ace_editor .ace_indent-guide {
@@ -90,9 +132,12 @@
     color: #999;
 }
 
-.window.dark #editor .ace_gutter-layer,
+.window.dark #editor .ace_gutter-layer {
+    background: #222222;
+}
+
 .window.dark .split {
-    background: #444;
+    background: transparent;
 }
 
 .window.dark #editor .ace-error {
@@ -110,6 +155,10 @@
     background: #0f3553;
 }
 
+.window.dark .ace-tm .ace_gutter-active-line {
+    background: #222;
+}
+
 .window.dark .ace_editor span.ace_flow.ace_declaration,
 .window.dark .ace_editor span.ace_divert,
 .window.dark .ace_editor span.ace_choice.ace_label,
@@ -117,7 +166,7 @@
 .window.dark .ace_editor span.ace_glue,
 .window.dark .ace_editor span.ace_include,
 .window.dark .ace_editor span.ace_external {
-    color:#6d9e8e;
+    color:#55c0e0;
 }
 
 .window.dark .ace_editor span.ace_choice.ace_bullets,
@@ -141,7 +190,7 @@
 .window.dark ::-webkit-scrollbar {
     width: .75rem;
     background: #282828;
-    border-left: 1px solid #323232;
+    border-left: none;
   }
   
 .window.dark ::-webkit-scrollbar-thumb {
@@ -150,4 +199,31 @@
 
 .window.dark .sidebar .nav-wrapper::-webkit-scrollbar-thumb {
     background: #323232;
+}
+
+.window.dark #toolbar .issue-popup {
+    background: #111;
+    border: 1px solid rgba(255, 255, 255, .05);
+}
+
+.window.dark #toolbar .issue-popup .table {
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+.window.dark #toolbar .issue-popup .line-no {
+    background: #1c1c1c;
+    border-right: 1px solid rgba(255, 255, 255, .05);
+}
+
+.window.dark #toolbar .issue-popup .row:hover {
+    background: #222222;
+}
+
+.window.dark #toolbar .nubbin {
+    filter: invert(.95);
+}
+
+.window.dark .busySpinner .iconfont {
+    color: #fff;
 }

@@ -25,7 +25,7 @@ DocCommentHighlightRules.getTagRule = function(start) {
         token : "comment.doc.tag.storage.type",
         regex : "\\b(?:TODO|FIXME|XXX|HACK)\\b"
     };
-}
+};
 
 DocCommentHighlightRules.getStartRule = function(start) {
     return {
@@ -106,11 +106,11 @@ var JavaScriptHighlightRules = function(options) {
                 regex : '"(?=.)',
                 next  : "qqstring"
             }, {
-                token : "constant.numeric", // hex
-                regex : /0(?:[xX][0-9a-fA-F]+|[bB][01]+)\b/
+                token : "constant.numeric", // hexadecimal, octal and binary
+                regex : /0(?:[xX][0-9a-fA-F]+|[oO][0-7]+|[bB][01]+)\b/
             }, {
-                token : "constant.numeric", // float
-                regex : /[+-]?\d[\d_]*(?:(?:\.\d*)?(?:[eE][+-]?\d+)?)?\b/
+                token : "constant.numeric", // decimal integers and floats
+                regex : /(?:\d\d*(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+\b)?/
             }, {
                 token : [
                     "storage.type", "punctuation.operator", "support.function",
@@ -161,6 +161,9 @@ var JavaScriptHighlightRules = function(options) {
                 next: "function_arguments"
             }, {
                 token : "keyword",
+                regex : "from(?=\\s*('|\"))"
+            }, {
+                token : "keyword",
                 regex : "(?:" + kwBeforeRe + ")\\b",
                 next : "start"
             }, {
@@ -176,6 +179,10 @@ var JavaScriptHighlightRules = function(options) {
                 token : "punctuation.operator",
                 regex : /[.](?![.])/,
                 next  : "property"
+            }, {
+                token : "storage.type",
+                regex : /=>/,
+                next  : "start"
             }, {
                 token : "keyword.operator",
                 regex : /--|\+\+|\.{3}|===|==|=|!=|!==|<+=?|>+=?|!|&&|\|\||\?:|[!$%&*+\-~\/^]=?/,
@@ -316,7 +323,7 @@ var JavaScriptHighlightRules = function(options) {
             }, {
                 token : "string",
                 regex : "\\\\$",
-                next  : "qqstring"
+                consumeLineEnd  : true
             }, {
                 token : "string",
                 regex : '"|$',
@@ -332,7 +339,7 @@ var JavaScriptHighlightRules = function(options) {
             }, {
                 token : "string",
                 regex : "\\\\$",
-                next  : "qstring"
+                consumeLineEnd  : true
             }, {
                 token : "string",
                 regex : "'|$",
@@ -342,8 +349,8 @@ var JavaScriptHighlightRules = function(options) {
             }
         ]
     };
-    
-    
+
+
     if (!options || !options.noES6) {
         this.$rules.no_regex.unshift({
             regex: "[{}]", onMatch: function(val, state, stack) {
@@ -378,14 +385,14 @@ var JavaScriptHighlightRules = function(options) {
                 defaultToken: "string.quasi"
             }]
         });
-        
+
         if (!options || options.jsx != false)
             JSX.call(this);
     }
-    
+
     this.embedRules(DocCommentHighlightRules, "doc-",
         [ DocCommentHighlightRules.getEndRule("no_regex") ]);
-    
+
     this.normalizeRules();
 };
 
@@ -436,8 +443,8 @@ function JSX() {
         {defaultToken: "string"}
     ];
     this.$rules.jsxAttributes = [{
-        token : "meta.tag.punctuation.tag-close.xml", 
-        regex : "/?>", 
+        token : "meta.tag.punctuation.tag-close.xml",
+        regex : "/?>",
         onMatch : function(value, currentState, stack) {
             if (currentState == stack[0])
                 stack.shift();
@@ -452,7 +459,7 @@ function JSX() {
             return [{type: this.token, value: value}];
         },
         nextState: "jsx"
-    }, 
+    },
     jsxJsRule,
     comments("jsxAttributes"),
     {
@@ -576,8 +583,8 @@ oop.inherits(FoldMode, BaseFoldMode);
 
 (function() {
     
-    this.foldingStartMarker = /(\{|\[)[^\}\]]*$|^\s*(\/\*)/;
-    this.foldingStopMarker = /^[^\[\{]*(\}|\])|^[\s\*]*(\*\/)/;
+    this.foldingStartMarker = /([\{\[\(])[^\}\]\)]*$|^\s*(\/\*)/;
+    this.foldingStopMarker = /^[^\[\{\(]*([\}\]\)])|^[\s\*]*(\*\/)/;
     this.singleLineBlockCommentRe= /^\s*(\/\*).*\*\/\s*$/;
     this.tripleStarBlockCommentRe = /^\s*(\/\*\*\*).*\*\/\s*$/;
     this.startRegionRe = /^\s*(\/\*|\/\/)#?region\b/;
@@ -719,6 +726,7 @@ oop.inherits(Mode, TextMode);
 
     this.lineCommentStart = "//";
     this.blockComment = {start: "/*", end: "*/"};
+    this.$quotes = {'"': '"', "'": "'", "`": "`"};
 
     this.getNextLineIndent = function(state, line, tab) {
         var indent = this.$getIndent(line);
@@ -776,6 +784,7 @@ oop.inherits(Mode, TextMode);
     };
 
     this.$id = "ace/mode/javascript";
+    this.snippetFileId = "ace/snippets/javascript";
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
@@ -799,7 +808,8 @@ var JavaHighlightRules = function() {
     "catch|extends|int|short|try|" +
     "char|final|interface|static|void|" +
     "class|finally|long|strictfp|volatile|" +
-    "const|float|native|super|while"
+    "const|float|native|super|while|" +
+    "var"
     );
 
     var buildinConstants = ("null|Infinity|NaN|undefined");
@@ -866,11 +876,41 @@ var JavaHighlightRules = function() {
                 token : "constant.language.boolean",
                 regex : "(?:true|false)\\b"
             }, {
+                regex: "(open(?:\\s+))?module(?=\\s*\\w)",
+                token: "keyword",
+                next: [{
+                    regex: "{",
+                    token: "paren.lparen",
+                    next: [{
+                        regex: "}",
+                        token: "paren.rparen",
+                        next: "start"
+                    }, {
+                        regex: "\\b(requires|transitive|exports|opens|to|uses|provides|with)\\b",
+                        token: "keyword" 
+                    }]
+                }, {
+                    token : "text",
+                    regex : "\\s+"
+                }, {
+                    token : "identifier",
+                    regex : "\\w+"
+                }, {
+                    token : "punctuation.operator",
+                    regex : "."
+                }, {
+                    token : "text",
+                    regex : "\\s+"
+                }, {
+                    regex: "", // exit if there is anything else
+                    next: "start"
+                }]
+            }, {
                 token : keywordMapper,
                 regex : "[a-zA-Z_$][a-zA-Z0-9_$]*\\b"
             }, {
                 token : "keyword.operator",
-                regex : "!|\\$|%|&|\\*|\\-\\-|\\-|\\+\\+|\\+|~|===|==|=|!=|!==|<=|>=|<<=|>>=|>>>=|<>|<|>|!|&&|\\|\\||\\?\\:|\\*=|%=|\\+=|\\-=|&=|\\^=|\\b(?:in|instanceof|new|delete|typeof|void)"
+                regex : "!|\\$|%|&|\\||\\^|\\*|\\/|\\-\\-|\\-|\\+\\+|\\+|~|===|==|=|!=|!==|<=|>=|<<=|>>=|>>>=|<>|<|>|!|&&|\\|\\||\\?|\\:|\\*=|\\/=|%=|\\+=|\\-=|&=|\\|=|\\^=|\\b(?:in|instanceof|new|delete|typeof|void)"
             }, {
                 token : "lparen",
                 regex : "[[({]"
@@ -885,17 +925,18 @@ var JavaHighlightRules = function() {
         "comment" : [
             {
                 token : "comment", // closing comment
-                regex : ".*?\\*\\/",
+                regex : "\\*\\/",
                 next : "start"
             }, {
-                token : "comment", // comment spanning whole line
-                regex : ".+"
+                defaultToken : "comment"
             }
         ]
     };
 
+    
     this.embedRules(DocCommentHighlightRules, "doc-",
         [ DocCommentHighlightRules.getEndRule("start") ]);
+    this.normalizeRules();
 };
 
 oop.inherits(JavaHighlightRules, TextHighlightRules);
@@ -903,16 +944,76 @@ oop.inherits(JavaHighlightRules, TextHighlightRules);
 exports.JavaHighlightRules = JavaHighlightRules;
 });
 
-define("ace/mode/java",["require","exports","module","ace/lib/oop","ace/mode/javascript","ace/mode/java_highlight_rules"], function(require, exports, module) {
+define("ace/mode/folding/java",["require","exports","module","ace/lib/oop","ace/mode/folding/cstyle","ace/range"], function(require, exports, module) {
+"use strict";
+
+var oop = require("../../lib/oop");
+var CStyleFoldMode = require("./cstyle").FoldMode;
+var Range = require("../../range").Range;
+
+var FoldMode = exports.FoldMode = function() {};
+oop.inherits(FoldMode, CStyleFoldMode);
+
+(function() {
+    this.importRegex = /^import /;
+    this.getCStyleFoldWidget = this.getFoldWidget;
+    this.getFoldWidget = function(session, foldStyle, row) {
+        if (foldStyle === "markbegin") {
+            var line = session.getLine(row);
+            if (this.importRegex.test(line)) {
+                if (row == 0 || !this.importRegex.test(session.getLine(row - 1)))
+                    return "start";
+            }
+        }
+
+        return this.getCStyleFoldWidget(session, foldStyle, row);
+    };
+    
+    this.getCstyleFoldWidgetRange = this.getFoldWidgetRange;
+    this.getFoldWidgetRange = function(session, foldStyle, row, forceMultiline) {
+        var line = session.getLine(row);
+        var match = line.match(this.importRegex);
+        if (!match || foldStyle !== "markbegin")
+            return this.getCstyleFoldWidgetRange(session, foldStyle, row, forceMultiline);
+
+        var startColumn = match[0].length;
+        var maxRow = session.getLength();
+        var startRow = row;
+        var endRow = row;
+
+        while (++row < maxRow) {
+            var line = session.getLine(row);
+            if (line.match(/^\s*$/))
+                continue;
+
+            if (!line.match(this.importRegex))
+                break;
+
+            endRow = row;
+        }
+
+        if (endRow > startRow) {
+            var endColumn = session.getLine(endRow).length;
+            return new Range(startRow, startColumn, endRow, endColumn);
+        }
+    };
+
+}).call(FoldMode.prototype);
+
+});
+
+define("ace/mode/java",["require","exports","module","ace/lib/oop","ace/mode/javascript","ace/mode/java_highlight_rules","ace/mode/folding/java"], function(require, exports, module) {
 "use strict";
 
 var oop = require("../lib/oop");
 var JavaScriptMode = require("./javascript").Mode;
 var JavaHighlightRules = require("./java_highlight_rules").JavaHighlightRules;
+var JavaFoldMode = require("./folding/java").FoldMode;
 
 var Mode = function() {
     JavaScriptMode.call(this);
     this.HighlightRules = JavaHighlightRules;
+    this.foldingRules = new JavaFoldMode();
 };
 oop.inherits(Mode, JavaScriptMode);
 
@@ -923,7 +1024,15 @@ oop.inherits(Mode, JavaScriptMode);
     };
 
     this.$id = "ace/mode/java";
+    this.snippetFileId = "ace/snippets/java";
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
-});
+});                (function() {
+                    window.require(["ace/mode/java"], function(m) {
+                        if (typeof module == "object" && typeof exports == "object" && module) {
+                            module.exports = m;
+                        }
+                    });
+                })();
+            

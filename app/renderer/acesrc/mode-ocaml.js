@@ -279,12 +279,11 @@ var OcamlHighlightRules = function() {
         "comment" : [
             {
                 token : "comment", // closing comment
-                regex : ".*?\\*\\)",
+                regex : "\\*\\)",
                 next : "start"
             },
             {
-                token : "comment", // comment spanning whole line
-                regex : ".+"
+                defaultToken : "comment"
             }
         ],
 
@@ -412,4 +411,11 @@ var indenter = /(?:[({[=:]|[-=]>|\b(?:else|try|with))\s*$/;
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
-});
+});                (function() {
+                    window.require(["ace/mode/ocaml"], function(m) {
+                        if (typeof module == "object" && typeof exports == "object" && module) {
+                            module.exports = m;
+                        }
+                    });
+                })();
+            

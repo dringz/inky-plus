@@ -15,7 +15,9 @@ const electronWindowOptions = {
   minHeight: 250,
   titleBarStyle: 'hidden',
   webPreferences: {
-      preload: path.join(__dirname, '..', 'renderer', 'preload.js')
+      preload: path.join(__dirname, '..', 'renderer', 'preload.js'),
+      contextIsolation: false,
+      nodeIntegration: true,
   }
 };
 
@@ -25,7 +27,7 @@ const recentFilesPath = path.join(electron.app.getPath("userData"), "recent-file
 
 let onRecentFilesChanged = null;
 
-const veiwSettingsPath = path.join(electron.app.getPath("userData"), "view-settings.json");
+const viewSettingsPath = path.join(electron.app.getPath("userData"), "view-settings.json");
 
 let onViewSettingsChanged = null;
 
@@ -175,15 +177,15 @@ function addRecentFile(filePath) {
     }
 }
 
-ProjectWindow.open = function(filePath) {
+ProjectWindow.open = async function(filePath) {
     if( !filePath ) {
-        var multiSelectPaths = dialog.showOpenDialog({
+        var multiSelectPaths = (await dialog.showOpenDialog({
             title: i18n._("Open main ink file"),
             properties: ['openFile'],
             filters: [
                 { name: i18n._('Ink files'), extensions: ['ink'] }
             ]
-        });
+        })).filePaths;
 
         if( multiSelectPaths && multiSelectPaths.length > 0 )
             filePath = multiSelectPaths[0];
@@ -203,22 +205,22 @@ ProjectWindow.setViewSettingsChanged = function(f) {
 }
 
 ProjectWindow.getViewSettings = function() {
-    if(!fs.existsSync(veiwSettingsPath)) {
-        return { theme:'light', zoom:'100' };
+    if(!fs.existsSync(viewSettingsPath)) {
+        return { theme:'dark', zoom:'125' };
     }
-    const json = fs.readFileSync(veiwSettingsPath, "utf-8");
+    const json = fs.readFileSync(viewSettingsPath, "utf-8");
     try {
         return JSON.parse(json);
     } catch(e) {
         console.error('Error in view settings JSON parsing:', e);
-        return { theme:'light', zoom:'100' };
+        return { theme:'dark', zoom:'125' };
     }
 }
 
 ProjectWindow.addOrChangeViewSetting = function(name, data){
     const viewSettings = ProjectWindow.getViewSettings();
     viewSettings[name] = data;
-    fs.writeFileSync(veiwSettingsPath, JSON.stringify(viewSettings), {
+    fs.writeFileSync(viewSettingsPath, JSON.stringify(viewSettings), {
         encoding: "utf-8"
     });
     if(onViewSettingsChanged) {

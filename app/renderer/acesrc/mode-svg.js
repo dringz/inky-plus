@@ -11,14 +11,10 @@ var XmlHighlightRules = function(normalize) {
         start : [
             {token : "string.cdata.xml", regex : "<\\!\\[CDATA\\[", next : "cdata"},
             {
-                token : ["punctuation.xml-decl.xml", "keyword.xml-decl.xml"],
-                regex : "(<\\?)(xml)(?=[\\s])", next : "xml_decl", caseInsensitive: true
-            },
-            {
                 token : ["punctuation.instruction.xml", "keyword.instruction.xml"],
                 regex : "(<\\?)(" + tagRegex + ")", next : "processing_instruction"
             },
-            {token : "comment.xml", regex : "<\\!--", next : "comment"},
+            {token : "comment.start.xml", regex : "<\\!--", next : "comment"},
             {
                 token : ["xml-pe.doctype.xml", "xml-pe.doctype.xml"],
                 regex : "(<\\!)(DOCTYPE)(?=[\\s])", next : "doctype", caseInsensitive: true
@@ -30,9 +26,9 @@ var XmlHighlightRules = function(normalize) {
             {defaultToken : "text.xml"}
         ],
 
-        xml_decl : [{
+        processing_instruction : [{
             token : "entity.other.attribute-name.decl-attribute-name.xml",
-            regex : "(?:" + tagRegex + ":)?" + tagRegex + ""
+            regex : tagRegex
         }, {
             token : "keyword.operator.decl-attribute-equals.xml",
             regex : "="
@@ -45,11 +41,6 @@ var XmlHighlightRules = function(normalize) {
             regex : "\\?>",
             next : "start"
         }],
-
-        processing_instruction : [
-            {token : "punctuation.instruction.xml", regex : "\\?>", next : "start"},
-            {defaultToken : "instruction.xml"}
-        ],
 
         doctype : [
             {include : "whitespace"},
@@ -88,7 +79,7 @@ var XmlHighlightRules = function(normalize) {
         ],
 
         comment : [
-            {token : "comment.xml", regex : "-->", next : "start"},
+            {token : "comment.end.xml", regex : "-->", next : "start"},
             {defaultToken : "comment.xml"}
         ],
 
@@ -135,7 +126,7 @@ var XmlHighlightRules = function(normalize) {
 
         attributes: [{
             token : "entity.other.attribute-name.xml",
-            regex : "(?:" + tagRegex + ":)?" + tagRegex + ""
+            regex : tagRegex
         }, {
             token : "keyword.operator.attribute-equals.xml",
             regex : "="
@@ -188,7 +179,7 @@ var XmlHighlightRules = function(normalize) {
                     stack.splice(0);
                     return this.token;
             }}
-        ]
+        ];
 
         this.embedRules(HighlightRules, prefix, [{
             token: ["meta.tag.punctuation.end-tag-open.xml", "meta.tag." + tag + ".tag-name.xml"],
@@ -219,7 +210,7 @@ var TokenIterator = require("../../token_iterator").TokenIterator;
 var lang = require("../../lib/lang");
 
 function is(token, type) {
-    return token.type.lastIndexOf(type + ".xml") > -1;
+    return token && token.type.lastIndexOf(type + ".xml") > -1;
 }
 
 var XmlBehaviour = function () {
@@ -289,14 +280,19 @@ var XmlBehaviour = function () {
             if (is(token, "reference.attribute-value"))
                 return;
             if (is(token, "attribute-value")) {
-                var firstChar = token.value.charAt(0);
-                if (firstChar == '"' || firstChar == "'") {
-                    var lastChar = token.value.charAt(token.value.length - 1);
-                    var tokenEnd = iterator.getCurrentTokenColumn() + token.value.length;
-                    if (tokenEnd > position.column || tokenEnd == position.column && firstChar != lastChar)
+                var tokenEndColumn = iterator.getCurrentTokenColumn() + token.value.length;
+                if (position.column < tokenEndColumn)
+                    return;
+                if (position.column == tokenEndColumn) {
+                    var nextToken = iterator.stepForward();
+                    if (nextToken && is(nextToken, "attribute-value"))
                         return;
+                    iterator.stepBackward();
                 }
             }
+            
+            if (/^\s*>/.test(session.getLine(position.row).slice(position.column)))
+                return;
             while (!is(token, "tag-name")) {
                 token = iterator.stepBackward();
                 if (token.value == "<") {
@@ -414,7 +410,7 @@ function is(token, type) {
         var tag = this._getFirstTagInLine(session, row);
 
         if (!tag)
-            return "";
+            return this.getCommentFoldWidget(session, row);
 
         if (tag.closing || (!tag.tagName && tag.selfClosing))
             return foldStyle == "markbeginend" ? "end" : "";
@@ -426,6 +422,12 @@ function is(token, type) {
             return "";
 
         return "start";
+    };
+    
+    this.getCommentFoldWidget = function(session, row) {
+        if (/comment/.test(session.getState(row)) && /<!-/.test(session.getLine(row)))
+            return "start";
+        return "";
     };
     this._getFirstTagInLine = function(session, row) {
         var tokens = session.getTokens(row);
@@ -545,8 +547,10 @@ function is(token, type) {
     this.getFoldWidgetRange = function(session, foldStyle, row) {
         var firstTag = this._getFirstTagInLine(session, row);
         
-        if (!firstTag)
-            return null;
+        if (!firstTag) {
+            return this.getCommentFoldWidget(session, row)
+                && session.getCommentFoldRange(row, session.getLine(row).length);
+        }
         
         var isBackward = firstTag.closing || firstTag.selfClosing;
         var stack = [];
@@ -691,7 +695,7 @@ DocCommentHighlightRules.getTagRule = function(start) {
         token : "comment.doc.tag.storage.type",
         regex : "\\b(?:TODO|FIXME|XXX|HACK)\\b"
     };
-}
+};
 
 DocCommentHighlightRules.getStartRule = function(start) {
     return {
@@ -772,11 +776,11 @@ var JavaScriptHighlightRules = function(options) {
                 regex : '"(?=.)',
                 next  : "qqstring"
             }, {
-                token : "constant.numeric", // hex
-                regex : /0(?:[xX][0-9a-fA-F]+|[bB][01]+)\b/
+                token : "constant.numeric", // hexadecimal, octal and binary
+                regex : /0(?:[xX][0-9a-fA-F]+|[oO][0-7]+|[bB][01]+)\b/
             }, {
-                token : "constant.numeric", // float
-                regex : /[+-]?\d[\d_]*(?:(?:\.\d*)?(?:[eE][+-]?\d+)?)?\b/
+                token : "constant.numeric", // decimal integers and floats
+                regex : /(?:\d\d*(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+\b)?/
             }, {
                 token : [
                     "storage.type", "punctuation.operator", "support.function",
@@ -827,6 +831,9 @@ var JavaScriptHighlightRules = function(options) {
                 next: "function_arguments"
             }, {
                 token : "keyword",
+                regex : "from(?=\\s*('|\"))"
+            }, {
+                token : "keyword",
                 regex : "(?:" + kwBeforeRe + ")\\b",
                 next : "start"
             }, {
@@ -842,6 +849,10 @@ var JavaScriptHighlightRules = function(options) {
                 token : "punctuation.operator",
                 regex : /[.](?![.])/,
                 next  : "property"
+            }, {
+                token : "storage.type",
+                regex : /=>/,
+                next  : "start"
             }, {
                 token : "keyword.operator",
                 regex : /--|\+\+|\.{3}|===|==|=|!=|!==|<+=?|>+=?|!|&&|\|\||\?:|[!$%&*+\-~\/^]=?/,
@@ -982,7 +993,7 @@ var JavaScriptHighlightRules = function(options) {
             }, {
                 token : "string",
                 regex : "\\\\$",
-                next  : "qqstring"
+                consumeLineEnd  : true
             }, {
                 token : "string",
                 regex : '"|$',
@@ -998,7 +1009,7 @@ var JavaScriptHighlightRules = function(options) {
             }, {
                 token : "string",
                 regex : "\\\\$",
-                next  : "qstring"
+                consumeLineEnd  : true
             }, {
                 token : "string",
                 regex : "'|$",
@@ -1008,8 +1019,8 @@ var JavaScriptHighlightRules = function(options) {
             }
         ]
     };
-    
-    
+
+
     if (!options || !options.noES6) {
         this.$rules.no_regex.unshift({
             regex: "[{}]", onMatch: function(val, state, stack) {
@@ -1044,14 +1055,14 @@ var JavaScriptHighlightRules = function(options) {
                 defaultToken: "string.quasi"
             }]
         });
-        
+
         if (!options || options.jsx != false)
             JSX.call(this);
     }
-    
+
     this.embedRules(DocCommentHighlightRules, "doc-",
         [ DocCommentHighlightRules.getEndRule("no_regex") ]);
-    
+
     this.normalizeRules();
 };
 
@@ -1102,8 +1113,8 @@ function JSX() {
         {defaultToken: "string"}
     ];
     this.$rules.jsxAttributes = [{
-        token : "meta.tag.punctuation.tag-close.xml", 
-        regex : "/?>", 
+        token : "meta.tag.punctuation.tag-close.xml",
+        regex : "/?>",
         onMatch : function(value, currentState, stack) {
             if (currentState == stack[0])
                 stack.shift();
@@ -1118,7 +1129,7 @@ function JSX() {
             return [{type: this.token, value: value}];
         },
         nextState: "jsx"
-    }, 
+    },
     jsxJsRule,
     comments("jsxAttributes"),
     {
@@ -1242,8 +1253,8 @@ oop.inherits(FoldMode, BaseFoldMode);
 
 (function() {
     
-    this.foldingStartMarker = /(\{|\[)[^\}\]]*$|^\s*(\/\*)/;
-    this.foldingStopMarker = /^[^\[\{]*(\}|\])|^[\s\*]*(\*\/)/;
+    this.foldingStartMarker = /([\{\[\(])[^\}\]\)]*$|^\s*(\/\*)/;
+    this.foldingStopMarker = /^[^\[\{\(]*([\}\]\)])|^[\s\*]*(\*\/)/;
     this.singleLineBlockCommentRe= /^\s*(\/\*).*\*\/\s*$/;
     this.tripleStarBlockCommentRe = /^\s*(\/\*\*\*).*\*\/\s*$/;
     this.startRegionRe = /^\s*(\/\*|\/\/)#?region\b/;
@@ -1385,6 +1396,7 @@ oop.inherits(Mode, TextMode);
 
     this.lineCommentStart = "//";
     this.blockComment = {start: "/*", end: "*/"};
+    this.$quotes = {'"': '"', "'": "'", "`": "`"};
 
     this.getNextLineIndent = function(state, line, tab) {
         var indent = this.$getIndent(line);
@@ -1442,6 +1454,7 @@ oop.inherits(Mode, TextMode);
     };
 
     this.$id = "ace/mode/javascript";
+    this.snippetFileId = "ace/snippets/javascript";
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
@@ -1559,4 +1572,11 @@ oop.inherits(Mode, XmlMode);
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
-});
+});                (function() {
+                    window.require(["ace/mode/svg"], function(m) {
+                        if (typeof module == "object" && typeof exports == "object" && module) {
+                            module.exports = m;
+                        }
+                    });
+                })();
+            

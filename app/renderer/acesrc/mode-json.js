@@ -24,11 +24,15 @@ var JsonHighlightRules = function() {
                 token : "constant.language.boolean",
                 regex : "(?:true|false)\\b"
             }, {
-                token : "invalid.illegal", // single quoted strings are not allowed
+                token : "text", // single quoted strings are not allowed
                 regex : "['](?:(?:\\\\.)|(?:[^'\\\\]))*?[']"
             }, {
-                token : "invalid.illegal", // comments are not allowed
+                token : "comment", // comments are not allowed, but who cares?
                 regex : "\\/\\/.*$"
+            }, {
+                token : "comment.start", // comments are not allowed, but who cares?
+                regex : "\\/\\*",
+                next  : "comment"
             }, {
                 token : "paren.lparen",
                 regex : "[[({]"
@@ -46,15 +50,19 @@ var JsonHighlightRules = function() {
                 regex : /\\(?:x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|["\\\/bfnrt])/
             }, {
                 token : "string",
-                regex : '[^"\\\\]+'
-            }, {
-                token : "string",
-                regex : '"',
+                regex : '"|$',
                 next  : "start"
             }, {
-                token : "string",
-                regex : "",
+                defaultToken : "string"
+            }
+        ],
+        "comment" : [
+            {
+                token : "comment.end", // comments are not allowed, but who cares?
+                regex : "\\*\\/",
                 next  : "start"
+            }, {
+                defaultToken: "comment"
             }
         ]
     };
@@ -127,8 +135,8 @@ oop.inherits(FoldMode, BaseFoldMode);
 
 (function() {
     
-    this.foldingStartMarker = /(\{|\[)[^\}\]]*$|^\s*(\/\*)/;
-    this.foldingStopMarker = /^[^\[\{]*(\}|\])|^[\s\*]*(\*\/)/;
+    this.foldingStartMarker = /([\{\[\(])[^\}\]\)]*$|^\s*(\/\*)/;
+    this.foldingStopMarker = /^[^\[\{\(]*([\}\]\)])|^[\s\*]*(\*\/)/;
     this.singleLineBlockCommentRe= /^\s*(\/\*).*\*\/\s*$/;
     this.tripleStarBlockCommentRe = /^\s*(\/\*\*\*).*\*\/\s*$/;
     this.startRegionRe = /^\s*(\/\*|\/\/)#?region\b/;
@@ -267,6 +275,9 @@ oop.inherits(Mode, TextMode);
 
 (function() {
 
+    this.lineCommentStart = "//";
+    this.blockComment = {start: "/*", end: "*/"};
+    
     this.getNextLineIndent = function(state, line, tab) {
         var indent = this.$getIndent(line);
 
@@ -308,4 +319,11 @@ oop.inherits(Mode, TextMode);
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
-});
+});                (function() {
+                    window.require(["ace/mode/json"], function(m) {
+                        if (typeof module == "object" && typeof exports == "object" && module) {
+                            module.exports = m;
+                        }
+                    });
+                })();
+            

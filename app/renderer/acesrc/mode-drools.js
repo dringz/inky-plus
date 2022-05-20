@@ -25,7 +25,7 @@ DocCommentHighlightRules.getTagRule = function(start) {
         token : "comment.doc.tag.storage.type",
         regex : "\\b(?:TODO|FIXME|XXX|HACK)\\b"
     };
-}
+};
 
 DocCommentHighlightRules.getStartRule = function(start) {
     return {
@@ -66,7 +66,8 @@ var JavaHighlightRules = function() {
     "catch|extends|int|short|try|" +
     "char|final|interface|static|void|" +
     "class|finally|long|strictfp|volatile|" +
-    "const|float|native|super|while"
+    "const|float|native|super|while|" +
+    "var"
     );
 
     var buildinConstants = ("null|Infinity|NaN|undefined");
@@ -133,11 +134,41 @@ var JavaHighlightRules = function() {
                 token : "constant.language.boolean",
                 regex : "(?:true|false)\\b"
             }, {
+                regex: "(open(?:\\s+))?module(?=\\s*\\w)",
+                token: "keyword",
+                next: [{
+                    regex: "{",
+                    token: "paren.lparen",
+                    next: [{
+                        regex: "}",
+                        token: "paren.rparen",
+                        next: "start"
+                    }, {
+                        regex: "\\b(requires|transitive|exports|opens|to|uses|provides|with)\\b",
+                        token: "keyword" 
+                    }]
+                }, {
+                    token : "text",
+                    regex : "\\s+"
+                }, {
+                    token : "identifier",
+                    regex : "\\w+"
+                }, {
+                    token : "punctuation.operator",
+                    regex : "."
+                }, {
+                    token : "text",
+                    regex : "\\s+"
+                }, {
+                    regex: "", // exit if there is anything else
+                    next: "start"
+                }]
+            }, {
                 token : keywordMapper,
                 regex : "[a-zA-Z_$][a-zA-Z0-9_$]*\\b"
             }, {
                 token : "keyword.operator",
-                regex : "!|\\$|%|&|\\*|\\-\\-|\\-|\\+\\+|\\+|~|===|==|=|!=|!==|<=|>=|<<=|>>=|>>>=|<>|<|>|!|&&|\\|\\||\\?\\:|\\*=|%=|\\+=|\\-=|&=|\\^=|\\b(?:in|instanceof|new|delete|typeof|void)"
+                regex : "!|\\$|%|&|\\||\\^|\\*|\\/|\\-\\-|\\-|\\+\\+|\\+|~|===|==|=|!=|!==|<=|>=|<<=|>>=|>>>=|<>|<|>|!|&&|\\|\\||\\?|\\:|\\*=|\\/=|%=|\\+=|\\-=|&=|\\|=|\\^=|\\b(?:in|instanceof|new|delete|typeof|void)"
             }, {
                 token : "lparen",
                 regex : "[[({]"
@@ -152,17 +183,18 @@ var JavaHighlightRules = function() {
         "comment" : [
             {
                 token : "comment", // closing comment
-                regex : ".*?\\*\\/",
+                regex : "\\*\\/",
                 next : "start"
             }, {
-                token : "comment", // comment spanning whole line
-                regex : ".+"
+                defaultToken : "comment"
             }
         ]
     };
 
+    
     this.embedRules(DocCommentHighlightRules, "doc-",
         [ DocCommentHighlightRules.getEndRule("start") ]);
+    this.normalizeRules();
 };
 
 oop.inherits(JavaHighlightRules, TextHighlightRules);
@@ -267,14 +299,13 @@ var DroolsHighlightRules = function() {
         return [
             {
                 token : "comment.block", // closing comment
-                regex : ".*?\\*\\/",
+                regex : "\\*\\/",
                 next : returnRule
             }, {
-                token : "comment.block", // comment spanning whole line
-                regex : ".+"
+                defaultToken : "comment.block"
             }
         ];
-      }
+      };
 
       var basicPostRules = function() {
         return [{
@@ -427,7 +458,7 @@ oop.inherits(FoldMode, BaseFoldMode);
             }
 
         }
-    }
+    };
 
 }).call(FoldMode.prototype);
 
@@ -452,8 +483,16 @@ oop.inherits(Mode, TextMode);
 (function() {
     this.lineCommentStart = "//";
     this.$id = "ace/mode/drools";
+    this.snippetFileId = "ace/snippets/drools";
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
 
-});
+});                (function() {
+                    window.require(["ace/mode/drools"], function(m) {
+                        if (typeof module == "object" && typeof exports == "object" && module) {
+                            module.exports = m;
+                        }
+                    });
+                })();
+            

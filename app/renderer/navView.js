@@ -130,7 +130,7 @@ function setFiles(mainInk, allFiles) {
     var $main = `<nav class="nav-group main-ink">
                     <h5 class="nav-group-title">Main ink file</h5>
                     <a class="nav-group-item ${extraClass}" data-file-id="${mainInk.id}">
-                        <span class="icon icon-book"></span>
+                        <span class="iconfont i-IndexFile"></span>
                         <span class="filename">${mainInk.filename()}</span>
                     </a>
                 </nav>`;
@@ -147,7 +147,7 @@ function setFiles(mainInk, allFiles) {
             if( file.isLoading ) extraClass += " loading";
 
             items = items + `<span class="nav-group-item ${extraClass}" data-file-id="${file.id}">
-                                <span class="icon icon-doc-text"></span>
+                                <span class="iconfont i-File"></span>
                                 <span class="filename">${name}</span>
                             </span>`;
         });
@@ -193,7 +193,7 @@ function hide() {
         $sidebar.hide();
     });
     $twoPane.animate({
-        left: 0
+        left: 0,
     }, slideAnimDuration);
     $sidebarSplit.animate({
         left: 0

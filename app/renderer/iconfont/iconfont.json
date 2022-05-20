@@ -1,0 +1,72 @@
+{
+  "id": "3417710",
+  "name": "Inky+",
+  "font_family": "iconfont",
+  "css_prefix_text": "i-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "29872501",
+      "name": "File",
+      "font_class": "File",
+      "unicode": "e608",
+      "unicode_decimal": 58888
+    },
+    {
+      "icon_id": "29872496",
+      "name": "IndexFile",
+      "font_class": "IndexFile",
+      "unicode": "e607",
+      "unicode_decimal": 58887
+    },
+    {
+      "icon_id": "29872493",
+      "name": "Loading",
+      "font_class": "Loading",
+      "unicode": "e606",
+      "unicode_decimal": 58886
+    },
+    {
+      "icon_id": "29872461",
+      "name": "Restart",
+      "font_class": "Restart",
+      "unicode": "e600",
+      "unicode_decimal": 58880
+    },
+    {
+      "icon_id": "29872462",
+      "name": "Rewind",
+      "font_class": "Rewind",
+      "unicode": "e601",
+      "unicode_decimal": 58881
+    },
+    {
+      "icon_id": "29872463",
+      "name": "Add",
+      "font_class": "Add",
+      "unicode": "e602",
+      "unicode_decimal": 58882
+    },
+    {
+      "icon_id": "29872464",
+      "name": "Menu",
+      "font_class": "Menu",
+      "unicode": "e603",
+      "unicode_decimal": 58883
+    },
+    {
+      "icon_id": "29872465",
+      "name": "Back",
+      "font_class": "Back",
+      "unicode": "e604",
+      "unicode_decimal": 58884
+    },
+    {
+      "icon_id": "29872466",
+      "name": "Forward",
+      "font_class": "Forward",
+      "unicode": "e605",
+      "unicode_decimal": 58885
+    }
+  ]
+}

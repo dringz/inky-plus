@@ -36,7 +36,7 @@ $(document).ready(() => {
                 var fromRight = (100-percent) + "%";
 
                 $left.css({"right": fromRight, "width": fromLeft});
-                $right.css({"left": fromLeft, "width": fromRight});
+                $right.css({"left": fromLeft, "width": $split.context.classList.contains('no-width') ? 'auto' : fromRight});
                 $split.css("left", fromLeft);
 
                 // Hack... not sure of a better way to do this

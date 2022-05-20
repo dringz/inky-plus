@@ -328,7 +328,7 @@ InkProject.prototype.export = function(exportType) {
 
     // Always start by building the JSON
     var inkJsCompatible = exportType == "js" || exportType == "web";
-    LiveCompiler.exportJson(inkJsCompatible, (err, compiledJsonTempPath) => {
+    LiveCompiler.exportJson(inkJsCompatible, async (err, compiledJsonTempPath) => {
         if( err ) {
             alert(`${i18n._("Could not export:")} ${err}`);
             return;
@@ -371,46 +371,46 @@ InkProject.prototype.export = function(exportType) {
             ]
         }
 
-        dialog.showSaveDialog(remote.getCurrentWindow(), saveOptions, (targetSavePath) => {
-            if( targetSavePath ) { 
-                this.defaultExportPath = targetSavePath;
+        const targetSavePath = (await dialog.showSaveDialog(remote.getCurrentWindow(), saveOptions)).filePath;
 
-                // JSON export - simply move compiled json into place
-                if( exportType == "json" || exportType == "js" ) {
-                    fs.stat(targetSavePath, (err, stats) => {
+        if( targetSavePath ) { 
+            this.defaultExportPath = targetSavePath;
 
-                        // File already exists, or there's another error
-                        // (error when code == ENOENT means file doens't exist, which is fine)
-                        if( !err || err.code != "ENOENT" ) {
-                            if( err ) alert(`${i18n._("Sorry, could not save to")} ${targetSavePath}`);
+            // JSON export - simply move compiled json into place
+            if( exportType == "json" || exportType == "js" ) {
+                fs.stat(targetSavePath, (err, stats) => {
 
-                            if( stats.isFile() ) fs.unlinkSync(targetSavePath);
+                    // File already exists, or there's another error
+                    // (error when code == ENOENT means file doens't exist, which is fine)
+                    if( !err || err.code != "ENOENT" ) {
+                        if( err ) alert(`${i18n._("Sorry, could not save to")} ${targetSavePath}`);
 
-                            if( stats.isDirectory() ) {
-                                alert(i18n._("Could not save because directory exists with the given name"));
-                                return
-                            }
+                        if( stats.isFile() ) fs.unlinkSync(targetSavePath);
+
+                        if( stats.isDirectory() ) {
+                            alert(i18n._("Could not save because directory exists with the given name"));
+                            return
                         }
+                    }
 
-                        // JS file: 
-                        if( exportType == "js" ) {
-                            this.convertJSONToJS(compiledJsonTempPath, targetSavePath);
-                        } 
+                    // JS file: 
+                    if( exportType == "js" ) {
+                        this.convertJSONToJS(compiledJsonTempPath, targetSavePath);
+                    } 
 
-                        // JSON: Just copy into place
-                        else {
-                            copyFile(compiledJsonTempPath, targetSavePath);
-                        }
+                    // JSON: Just copy into place
+                    else {
+                        copyFile(compiledJsonTempPath, targetSavePath);
+                    }
 
-                    });
-                }
-
-                // Web export
-                else {
-                    this.buildForWeb(compiledJsonTempPath, targetSavePath);
-                }
+                });
             }
-        });
+
+            // Web export
+            else {
+                this.buildForWeb(compiledJsonTempPath, targetSavePath);
+            }
+        }
     });
 }
 

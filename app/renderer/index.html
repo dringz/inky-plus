@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="dark.css">
     <link rel="stylesheet" href="contrast.css">
     <link rel="stylesheet" href="focus.css">
+    <link rel="stylesheet" href="iconfont/iconfont.css">
 
     <div class="window">
       
@@ -27,14 +28,14 @@
         <div class="buttons left">
 
           <div class="button nav-toggle" title="Toggle file browser">
-            <span class="icon icon-menu"></span>
+            <span class="iconfont i-Menu"></span>
           </div>
 
           <div class="button nav-back" title="Navigate back">
-            <span class="icon icon-left-dir"></span>
+            <span class="iconfont i-Back"></span>
           </div>
           <div class="button nav-forward" title="Navigate forward">
-            <span class="icon icon-right-dir"></span>
+            <span class="iconfont i-Forward"></span>
           </div>
 
         </div>
@@ -49,14 +50,16 @@
         </div>
 
         <div class="buttons right">
-          <div class="busySpinner"></div>
+          <div class="busySpinner">
+            <div class="iconfont i-Loading"></div>
+          </div>
 
           <div class="button step-back i18n" title="Rewind a single choice">
-            <span class="icon icon-reply"></span>
+            <span class="iconfont i-Rewind"></span>
           </div>
 
           <div class="button rewind i18n" title="Restart story">
-            <span class="icon icon-reply-all"></span>
+            <span class="iconfont i-Restart"></span>
           </div>
 
         </div>
@@ -79,7 +82,7 @@
               <nav class="nav-group main-ink">
                 <h5 class="nav-group-title i18n">Main ink file</h5>
                 <a class="nav-group-item active">
-                  <span class="icon icon-book"></span>
+                  <span class="iconfont i-IndexFile"></span>
                   <span class="filename"></span>
                 </a>
               </nav>
@@ -87,7 +90,7 @@
 
             <div class="footer">
               <a class="add-include-button">
-                <span class="icon icon-plus"></span>
+                <span class="iconfont i-Add"></span>
                 <span class="i18n">Add new include</span>
               </a>
               <div class="new-include-form">
@@ -107,29 +110,34 @@
 
           </div><!-- sidebar -->
 
-          <div class="split hidden"></div>
+          <div class="split hidden no-width"></div>
 
           <div class="twopane">
-            <div id="editor"></div>
+            <div id="editor-wrapper">
+              <div id="editor">
+              </div>
+            </div>
             
             <div class="split"></div>
 
-            <div id="player">
+            <div id="player-wrapper">
+              <div id="player">
               
-              <table class="expressionWatch">
-                <tbody>
-                </tbody>
-              </table>
-
-              <div class="scrollContainer">
-                <div class="innerText active">
-                </div>
-                <div class="hiddenBuffer">
-                  <div class="innerText">
+                <table class="expressionWatch">
+                  <tbody>
+                  </tbody>
+                </table>
+  
+                <div class="scrollContainer">
+                  <div class="innerText active">
+                  </div>
+                  <div class="hiddenBuffer">
+                    <div class="innerText">
+                    </div>
                   </div>
                 </div>
+  
               </div>
-
             </div>
           </div>
         </div>

@@ -332,6 +332,11 @@ ipc.on("change-theme", (event, newTheme) => {
 
 ipc.on("zoom", (event, amount) => {
 
+    changeZoom(amount);
+
+});
+
+function changeZoom(amount) {
     // Search manually for element by ID
     // (jQuery wrapping mutates attributes!)
     let editorEl = document.getElementById("editor");
@@ -362,8 +367,8 @@ ipc.on("zoom", (event, amount) => {
         editorEl.style.fontSize = currentSize + "px";
         playerEl.style.fontSize = currentSize + "px";
     }
-
-});
+}
+changeZoom(125);
 
 ipc.on("insertSnippet", (event, snippetContent) => {
     EditorView.insert(snippetContent);
