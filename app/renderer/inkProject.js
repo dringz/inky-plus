@@ -492,9 +492,9 @@ InkProject.prototype.buildForWeb = function(jsonFilePath, targetDirectory) {
          path.join(targetDirectory, "main.js"));
 }
 
-InkProject.prototype.tryClose = function() {
+InkProject.prototype.tryClose = async function() {
     if( this.hasUnsavedChanges ) {
-        dialog.showMessageBox(remote.getCurrentWindow(), {
+        const response = (await dialog.showMessageBox(remote.getCurrentWindow(), {
             type: "warning",
             message: i18n._("Would you like to save changes before exiting?"),
             detail: i18n._("Your changes will be lost if you don't save."),
@@ -504,24 +504,25 @@ InkProject.prototype.tryClose = function() {
                 i18n._("Cancel")
             ],
             defaultId: 0
-        }, (response) => {
-            // Save
-            if( response == 0 ) {
-                this.save(false, () => {
-                    this.closeImmediate();
-                });
-            }
+        })).response;
 
-            // Don't save
-            else if( response == 1 ) {
+        console.log(response)
+
+        if( response == 0 ) {
+            this.save(false, () => {
                 this.closeImmediate();
-            }
+            });
+        }
 
-            // Cancel
-            else { 
-                ipc.send("project-cancelled-close");
-            }
-        });
+        // Don't save
+        else if( response == 1 ) {
+            this.closeImmediate();
+        }
+
+        // Cancel
+        else { 
+            ipc.send("project-cancelled-close");
+        }
     } 
 
     // Nothing to save, just exit
